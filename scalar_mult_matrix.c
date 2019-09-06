@@ -9,7 +9,24 @@ typedef struct matrix{
 }MATRIX_TYPE;
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
+	int h = matrix->height;
+	int w = matrix->width;
+	int i;
+	float* scalar_alligned = (float*)aligned_alloc(32, h*w*sizeof(float)); 
 
+	__m256 scalar_vec = _mm256_load_ps(scalar_alligned);
+	__m256 rows_vec = _mm256_load_ps(matrix->rows);
+
+	scalar_vec = _mm256_set1_ps(scalar_value);
+
+	rows_vec = _mm256_mul_ps(scalar_vec, rows_vec);
+
+	matrix->rows = (float*)&rows_vec;
+
+	for(i = 0; i < h*w; i++){
+		printf("%.1f \n", matrix->rows[i]);
+	}
+	
 	return 0;
 
 }
@@ -17,11 +34,13 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 //argv -> Height, Width e escalar
 
 int main(int argc, char* argv[]){
+	int i;
 	int result;
 	long unsigned int h = 1 << 21;
 	long unsigned int w = 1 << 21;
 	float scalar;
 	char *eptr = NULL;
+	float* rows_aux;
 
 	if(argc != 4){
 		printf("Quantidade de parâmetros inesperada! %d \n", argc);
@@ -46,6 +65,12 @@ int main(int argc, char* argv[]){
 	if(m->rows == NULL){
 		printf("Erro ao alocar linhas da matriz!\n");
 	}
+
+	__m256 row_values = _mm256_load_ps(m->rows);
+
+	row_values = _mm256_set1_ps(5.0);
+
+	m->rows = (float*)&row_values;	
 
 	result = scalar_matrix_mult(scalar, m);
 
