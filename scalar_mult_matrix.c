@@ -9,24 +9,51 @@ typedef struct matrix{
 }MATRIX_TYPE;
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
-	int h = matrix->height;
-	int w = matrix->width;
-	int i;
+	long unsigned int h = matrix->height;
+	long unsigned int w = matrix->width;
+	long unsigned int i;
+
 	float* scalar_alligned = (float*)aligned_alloc(32, h*w*sizeof(float)); 
 
 	__m256 scalar_vec = _mm256_load_ps(scalar_alligned);
-	__m256 rows_vec = _mm256_load_ps(matrix->rows);
-
 	scalar_vec = _mm256_set1_ps(scalar_value);
 
-	rows_vec = _mm256_mul_ps(scalar_vec, rows_vec);
+	__m256 rows_vec = _mm256_load_ps(matrix->rows);
 
-	matrix->rows = (float*)&rows_vec;
+	float *nxt_scalar = scalar_alligned;
+	float *nxt_rows = matrix->rows;
+
+	printf("altura %lu\n", h);
+	printf("largura %lu\n", w);
+	printf("escalar %.2f\n", scalar_value);
+
+	for(i = 0; i < (h*w); i += 8, nxt_rows += 8, nxt_scalar += 8){
+		//printf("primeiro for %lu\n", i);
+		_mm256_store_ps(nxt_scalar, scalar_vec);
+		_mm256_store_ps(nxt_rows, rows_vec);
+	}
+
+	nxt_rows = matrix->rows;
+	nxt_scalar = scalar_alligned;
+
+	for(i = 0; i < (h*w); i += 8, nxt_scalar += 8, nxt_rows += 8){
+		//printf("iteracao %d\n", i);
+		//printf("segundo for %lu\n", i);
+		__m256 rows_vec = _mm256_load_ps(nxt_rows);
+		__m256 scalar_vec = _mm256_load_ps(nxt_scalar);
+		
+		rows_vec = _mm256_mul_ps(scalar_vec, rows_vec);
+
+		_mm256_store_ps(nxt_rows, rows_vec);
+		//_mm256_store_ps(nxt_scalar, scalar_vec);
+	}
+
 
 	for(i = 0; i < h*w; i++){
 		printf("%.1f \n", matrix->rows[i]);
 	}
-	
+		
+	free(scalar_alligned);
 	return 0;
 
 }
@@ -68,7 +95,7 @@ int main(int argc, char* argv[]){
 
 	__m256 row_values = _mm256_load_ps(m->rows);
 
-	row_values = _mm256_set1_ps(5.0);
+	row_values = _mm256_set1_ps(5.0f);
 
 	m->rows = (float*)&row_values;	
 
@@ -77,7 +104,10 @@ int main(int argc, char* argv[]){
 	if(result == 1){
 		printf("Erro ao multiplicar vetor!\n");
 		return 1;
+	}else{
+		printf("sucesso\n");
 	}
 
+	free(m);
 	return 0;	
 }
