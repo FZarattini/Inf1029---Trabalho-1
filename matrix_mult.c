@@ -32,12 +32,12 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 	float *nxt_rowsB = matrixB->rows;
 	float *nxt_rowsC = matrixC->rows; 
 
-	for(i = 0; i < h*w; i++){
+	for(i = 0; i < (h*w); i++){
 		printf("Pre passar pelo store_ps	matrixA: %.1f 	matrixB: %.1f	matrixC: %.1f  \n", matrixA->rows[i],matrixB->rows[i], matrixC->rows[i]);
 	}
 
 	printf("Passando pelo store_ps\n\n\n");
-	for(i = 0; i < (h*w); i += 8, nxt_rowsA += 8, nxt_rowsB += 8){
+	for(i = 0; i < (h*w); i += 8, nxt_rowsA += 8, nxt_rowsB += 8, nxt_rowsC+=8){
 		_mm256_store_ps(nxt_rowsA, rows_vecA);
 		_mm256_store_ps(nxt_rowsB, rows_vecB);
 		_mm256_store_ps(nxt_rowsC, rows_vecC); 
