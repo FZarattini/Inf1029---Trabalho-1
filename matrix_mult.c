@@ -8,56 +8,6 @@ typedef struct matrix{
 	float *rows;
 }MATRIX_TYPE;
 
-int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
-	long unsigned int h = matrix->height;
-	long unsigned int w = matrix->width;
-	long unsigned int i;
-
-	float* scalar_alligned = (float*)aligned_alloc(32, h*w*sizeof(float)); 
-
-	__m256 scalar_vec = _mm256_load_ps(scalar_alligned);
-	scalar_vec = _mm256_set1_ps(scalar_value);
-
-	__m256 rows_vec = _mm256_load_ps(matrix->rows);
-
-	float *nxt_scalar = scalar_alligned;
-	float *nxt_rows = matrix->rows;
-
-	printf("altura %lu\n", h);
-	printf("largura %lu\n", w);
-	printf("escalar %.2f\n", scalar_value);
-
-	for(i = 0; i < (h*w); i += 8, nxt_rows += 8, nxt_scalar += 8){
-		//printf("primeiro for %lu\n", i);
-		_mm256_store_ps(nxt_scalar, scalar_vec);
-		_mm256_store_ps(nxt_rows, rows_vec);
-	}
-
-	nxt_rows = matrix->rows;
-	nxt_scalar = scalar_alligned;
-
-	for(i = 0; i < (h*w); i += 8, nxt_scalar += 8, nxt_rows += 8){
-		//printf("iteracao %d\n", i);
-		//printf("segundo for %lu\n", i);
-		__m256 rows_vec = _mm256_load_ps(nxt_rows);
-		__m256 scalar_vec = _mm256_load_ps(nxt_scalar);
-		
-		rows_vec = _mm256_mul_ps(scalar_vec, rows_vec);
-
-		_mm256_store_ps(nxt_rows, rows_vec);
-		//_mm256_store_ps(nxt_scalar, scalar_vec);
-	}
-
-
-	for(i = 0; i < h*w; i++){
-		printf("%.1f \n", matrix->rows[i]);
-	}
-		
-	free(scalar_alligned);
-	return 0;
-
-}
-
 
 
 ////////////////////////////////////////////
@@ -80,15 +30,28 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 
 	float *nxt_rowsA = matrixA->rows;
 	float *nxt_rowsB = matrixB->rows;
+	float *nxt_rowsC = matrixC->rows; 
 
+	for(i = 0; i < h*w; i++){
+		printf("Pre passar pelo store_ps	matrixA: %.1f 	matrixB: %.1f	matrixC: %.1f  \n", matrixA->rows[i],matrixB->rows[i], matrixC->rows[i]);
+	}
 
+	printf("Passando pelo store_ps\n\n\n");
 	for(i = 0; i < (h*w); i += 8, nxt_rowsA += 8, nxt_rowsB += 8){
 		_mm256_store_ps(nxt_rowsA, rows_vecA);
 		_mm256_store_ps(nxt_rowsB, rows_vecB);
+		_mm256_store_ps(nxt_rowsC, rows_vecC); 
 	}
+
+
+	for(i = 0; i < h*w; i++){
+		printf("Pos passar pelo store_ps	matrixA: %.1f 	matrixB: %.1f	matrixC: %.1f  \n", matrixA->rows[i],matrixB->rows[i], matrixC->rows[i]);
+	}
+
 
 	nxt_rowsA = matrixA->rows;
 	nxt_rowsB = matrixB->rows;
+	nxt_rowsC = matrixC->rows; 
 	float *nxt_result_matrixC = matrixC->rows;
 
 	for(i = 0; i < (h*w); i += 8, nxt_rowsA += 8, nxt_rowsB += 8, nxt_result_matrixC+=8)
@@ -107,10 +70,10 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 	}
 		
 
-	return 0;
+	return 1;
 }
 
-//argv -> Height, Width e escalar
+//argv -> Height, Width
 
 int main(int argc, char* argv[]){
 	int i;
@@ -141,55 +104,66 @@ int main(int argc, char* argv[]){
 	mA->width = w;
 	mA->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
 
-
-	if(mA->rows == NULL){
-		printf("A Erro ao alocar linhas da matriz!\n");
-	}
-
-
 	mB->height = h;
 	mB->width = w;
 	mB->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
-
-
-	if(mB->rows == NULL){
-		printf("B Erro ao alocar linhas da matriz!\n");
-	}
 
 	mC->height = h;
 	mC->width = w;
 	mC->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
 
+	if(mA->rows == NULL){
+		printf("A Erro ao alocar linhas da matriz!\n");
+	}
 
-	if(mC->rows == NULL){
+	else if(mB->rows == NULL){
+		printf("B Erro ao alocar linhas da matriz!\n");
+	}
+
+
+	else if(mC->rows == NULL){
 		printf("C Erro ao alocar linhas da matriz!\n");
 	}
 
 
 	__m256 row_valuesA = _mm256_load_ps(mA->rows);
-
 	row_valuesA = _mm256_set1_ps(5.0f);
+	mA->rows = (float*)&row_valuesA;
 
-	mA->rows = (float*)&row_valuesA;	
+
+	for(i = 0; i < h*w; i++){
+		printf("ma %.1f \n", mA->rows[i]);
+	}
+		
+	
 	/////////////////////////////////////
 
 	__m256 row_valuesB = _mm256_load_ps(mB->rows);
-
-	row_valuesB = _mm256_set1_ps(5.0f);
-
+	row_valuesB = _mm256_set1_ps(2.0f);
 	mB->rows = (float*)&row_valuesB;	
+
+
+
+	for(i = 0; i < h*w; i++){
+		printf("Mb: %.1f \n", mB->rows[i]);
+	}
+		
 
 	/////////////////////////////////////
 
 	__m256 row_valuesC = _mm256_load_ps(mC->rows);
-
-	//row_valuesC = _mm256_set1_ps(0.0f);
-
+	row_valuesC = _mm256_set1_ps(0.0f);
 	mC->rows = (float*)&row_valuesC;	
+
+
+	for(i = 0; i < h*w; i++){
+		printf("mc %.1f \n", mC->rows[i]);
+	}
+		
 
 	result = matrix_matrix_mult(mA, mB, mC);
 
-	if(result == 1){
+	if(result == 0){
 		printf("Erro ao multiplicar vetor!\n");
 		return 1;
 	}else{
