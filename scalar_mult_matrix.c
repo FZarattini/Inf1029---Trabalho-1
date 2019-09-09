@@ -1,113 +1,120 @@
+#include <immintrin.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <immintrin.h>
+#include <math.h>
+#include <errno.h>
+#include <string.h>
 
 typedef struct matrix{
-	unsigned long int height;
-	unsigned long int width;
-	float *rows;
+  unsigned long int height;
+  unsigned long int width;
+  float *rows;
 }MATRIX_TYPE;
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
-	long unsigned int h = matrix->height;
-	long unsigned int w = matrix->width;
-	long unsigned int i;
-
-	float* scalar_alligned = (float*)aligned_alloc(32, h*w*sizeof(float)); 
-
-	__m256 scalar_vec = _mm256_load_ps(scalar_alligned);
-	scalar_vec = _mm256_set1_ps(scalar_value);
-
-	__m256 rows_vec = _mm256_load_ps(matrix->rows);
-
-	float *nxt_scalar = scalar_alligned;
-	float *nxt_rows = matrix->rows;
-
-	printf("altura %lu\n", h);
-	printf("largura %lu\n", w);
-	printf("escalar %.2f\n", scalar_value);
-
-	for(i = 0; i < (h*w); i += 8, nxt_rows += 8, nxt_scalar += 8){
-		//printf("primeiro for %lu\n", i);
-		_mm256_store_ps(nxt_scalar, scalar_vec);
-		_mm256_store_ps(nxt_rows, rows_vec);
-	}
-
-	nxt_rows = matrix->rows;
-	nxt_scalar = scalar_alligned;
-
-	for(i = 0; i < (h*w); i += 8, nxt_scalar += 8, nxt_rows += 8){
-		//printf("iteracao %d\n", i);
-		//printf("segundo for %lu\n", i);
-		__m256 rows_vec = _mm256_load_ps(nxt_rows);
-		__m256 scalar_vec = _mm256_load_ps(nxt_scalar);
-		
-		rows_vec = _mm256_mul_ps(scalar_vec, rows_vec);
-
-		_mm256_store_ps(nxt_rows, rows_vec);
-		//_mm256_store_ps(nxt_scalar, scalar_vec);
-	}
-
-
-	for(i = 0; i < h*w; i++){
-		printf("%.1f \n", matrix->rows[i]);
-	}
-		
-	free(scalar_alligned);
-	return 0;
-
-}
-
-//argv -> Height, Width e escalar
-
-int main(int argc, char* argv[]){
-	int i;
-	int result;
 	long unsigned int h = 1 << 21;
 	long unsigned int w = 1 << 21;
-	float scalar;
-	char *eptr = NULL;
-	float* rows_aux;
+	int index;
+	h = matrix->height;
+	w = matrix->width;
 
-	if(argc != 4){
-		printf("Quantidade de parâmetros inesperada! %d \n", argc);
-		return 1;
+	/* Initialize the two argument vectors */
+    float *scalar_alligned =  (float*)aligned_alloc(32, h*w*sizeof(float));
+    matrix->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
+    //float *c = (float*)aligned_alloc(32, N*sizeof(float));
+    float *result = (float*)aligned_alloc(32, h*w*sizeof(float));
+
+  	/* Initialize the three argument vectors */
+  	__m256 vec_scalar = _mm256_set1_ps(scalar_value);
+  	__m256 vec_rows = _mm256_set1_ps(2.0f);
+
+	  float *nxt_scalar = scalar_alligned; 
+	  float *nxt_rows = matrix->rows; 
+
+	  for (long unsigned int i = 0; i < (h*w); i += 8, nxt_scalar += 8, nxt_rows += 8) {
+
+		  /* Store the elements of the vectors in the arrays */
+		  _mm256_store_ps(nxt_scalar, vec_scalar);
+		  _mm256_store_ps(nxt_rows, vec_rows);
+	  }
+
+	  /* Compute the difference between the two vectors */
+	  nxt_scalar = scalar_alligned; 
+	  nxt_rows = matrix->rows; 
+	  float *nxt_result = result; 
+
+	  for (long unsigned int i = 0; i < h*w; i += 8, nxt_scalar += 8, nxt_rows += 8, nxt_result += 8) {
+		  /* Initialize the three argument vectors */
+		  __m256 vec_scalar = _mm256_load_ps(nxt_scalar);
+		  __m256 vec_rows = _mm256_load_ps(nxt_rows);
+		  //__m256 vec_c = _mm256_load_ps(nxt_c);
+
+		  /* Compute the expression res = a * b + c between the three vectors */
+		  __m256 vec_result = _mm256_mul_ps(vec_scalar, vec_rows);
+
+		  /* Store the elements of the result vector */
+		  _mm256_store_ps(nxt_result, vec_result);
+	  }
+
+	  matrix->rows = result;
+
+	  for(index = 0 ; index < (h*w); index++){
+	  	if(matrix->rows[index] != scalar_value*2.0f)
+	  		return 0;
+	    printf("%.2f\n", matrix->rows[index]);
+	  }
+
+
+
+	  return 1;
 	}
 
-	h = strtol(argv[1], &eptr, 10);
-	w = strtol(argv[2], &eptr, 10);
-	scalar = strtof(argv[3], NULL);
+	int main(int argc, char *argv[]) {
+	  long unsigned int h = 1<<21;
+	  long unsigned int w = 1<<21;
+	  float scalar;
+	  char *eptr = NULL;
+	  int resultado;
 
-	if(h == 0 || w == 0){
-		printf("Argumento 0!\n");
-		return 1;
-	}
+	  // Check arguments
+	  if (argc != 4) {
+	        printf("Usage: %s <vector_length>\n", argv[0]);
+	        return 0;
+	  }
 
-	MATRIX_TYPE *m = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+	  // Convert arguments
+	  h = strtol(argv[1], &eptr, 10);
+	  w = strtol(argv[2], &eptr, 10);
+	  scalar = strtof(argv[3], NULL);
 
-	m->height = h;
-	m->width = w;
-	m->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
+	  if (h == 0 || w == 0 || scalar == 0) {
+        printf("%s: erro na conversao do argumento: errno = %d\n", argv[0], errno);
 
-	if(m->rows == NULL){
-		printf("Erro ao alocar linhas da matriz!\n");
-	}
+        /* If a conversion error occurred, display a message and exit */
+        if (errno == EINVAL)
+        {
+            printf("Conversion error occurred: %d\n", errno);
+            return 1;
+        }
 
-	__m256 row_values = _mm256_load_ps(m->rows);
+        /* If the value provided was out of range, display a warning message */
+        if (errno == ERANGE) {
+            printf("The value provided was out of rangei: %d\n", errno);
+            return 1;
+		}
+   	 }
 
-	row_values = _mm256_set1_ps(5.0f);
+	  MATRIX_TYPE *m = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+	  m->height = h;
+	  m->width = w;
 
-	m->rows = (float*)&row_values;	
+	  resultado = scalar_matrix_mult(scalar, m);
 
-	result = scalar_matrix_mult(scalar, m);
+	  if (resultado == 1){
+	  	printf("Sucesso!\n");
+	  }else{
+	  	printf("Erro no calculo!\n");
+	  }
 
-	if(result == 1){
-		printf("Erro ao multiplicar vetor!\n");
-		return 1;
-	}else{
-		printf("sucesso\n");
-	}
-
-	free(m);
-	return 0;	
+	  return 0;
 }
