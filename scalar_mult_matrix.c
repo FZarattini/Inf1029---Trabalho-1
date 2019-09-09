@@ -64,8 +64,6 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	    printf("%.2f\n", matrix->rows[index]);
 	  }
 
-
-
 	  return 1;
 	}
 
