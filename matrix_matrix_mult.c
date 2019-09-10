@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   A->rows =  (float*)aligned_alloc(32, hA*wA*sizeof(float));
   B->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
   float *result = (float*)aligned_alloc(32, hA*wB*sizeof(float));
-  float *valueA = (float*) aligned_alloc(32, wB * sizeof(float));
+  float *valueA_alligned = (float*) aligned_alloc(32, wB * sizeof(float));
 
   /* Initialize the three argument vectors */
   __m256 vec_rowsA = _mm256_set1_ps(5.0f);
@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
 
   float *nxt_rowsA = A->rows; 
   float *nxt_rowsB = B->rows; 
+  float* nxt_valueA = valueA_alligned;
 
   for (i = 0; 
 	i < (hA * wA); 
@@ -64,26 +65,51 @@ int main(int argc, char *argv[]) {
   /* Compute the difference between the two vectors */
   nxt_rowsA = A->rows; 
   nxt_rowsB = B->rows;  
+  
   float *nxt_result = result;
 
   __m256 vec_result = _mm256_load_ps(nxt_result);
+  __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
+
   vec_result = _mm256_set1_ps(0.0);
+
+  //cont = 0;
 
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
     //__m256 vec_rowsA = _mm256_load_ps(nxt_rowsA);
-    __m256 valueA = _mm256_set1_ps(*nxt_rowsA);
+    //printf("PRIMEIRO FOR \n");
+    __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
+    vec_valueA = _mm256_set1_ps(*nxt_rowsA);
 
-    for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8, nxt_result += 8){
+    _mm256_store_ps(nxt_valueA, vec_valueA);
+    nxt_valueA = (float*)&vec_valueA;
+    //printf("PRIMEIRO FOR \n");
+    for(int index = 0 ; index < (hA*wB); index++){
+      printf("%.2f ----------- %lu \n", nxt_valueA[index], i);
+    } 
+
+
+    for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
+      //printf("SEGUNDO FOR  \n");
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
-      __m256 vec_result = _mm256_load_ps(nxt_result);
+      //printf("SEGUNDO FOR \n");
+      for(index = 0 ; index < (hA * wB); index += 8, nxt_result += 8){
+        __m256 vec_result = _mm256_load_ps(nxt_result);
+        vec_result = _mm256_fmadd_ps(vec_valueA, vec_rowsB, vec_result);
 
-      vec_result = _mm256_fmadd_ps(valueA, vec_rowsB, vec_result);
+       _mm256_store_ps(nxt_result, vec_result);
+       //printf("TERCEIRO FOR \n");
+       //cont++;
+       //printf("%d\n", cont);
+
+      }
     }  
   }
 
-  for(int index = 0 ; index < (hA*wB); index++){
-    printf("%.2f\n", result[index]);
-  }
+  /*for(int index = 0 ; index < (hA*wB); index++){
+    printf("%.2f  -----  %d\n", result[index], index);
+
+  }*/
   
 
   return 0;
