@@ -48,6 +48,9 @@ int main(int argc, char *argv[]) {
 
   float *nxt_rowsA = A->rows; 
   float *nxt_rowsB = B->rows; 
+  float* start_rowsA = A->rows;
+  float* start_rowsB = B->rows;
+
   float* nxt_valueA = valueA_alligned;
 
   for (i = 0; 
@@ -64,9 +67,12 @@ int main(int argc, char *argv[]) {
 
   /* Compute the difference between the two vectors */
   nxt_rowsA = A->rows; 
-  nxt_rowsB = B->rows;  
+  nxt_rowsB = B->rows; 
+
+
   
   float *nxt_result = result;
+  float *start_result = result;
 
   __m256 vec_result = _mm256_load_ps(nxt_result);
   __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
@@ -76,40 +82,42 @@ int main(int argc, char *argv[]) {
   //cont = 0;
 
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
-    //__m256 vec_rowsA = _mm256_load_ps(nxt_rowsA);
-    //printf("PRIMEIRO FOR \n");
+
     __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
     vec_valueA = _mm256_set1_ps(*nxt_rowsA);
 
     _mm256_store_ps(nxt_valueA, vec_valueA);
-    nxt_valueA = (float*)&vec_valueA;
-    //printf("PRIMEIRO FOR \n");
-    for(int index = 0 ; index < (hA*wB); index++){
-      printf("%.2f ----------- %lu \n", nxt_valueA[index], i);
-    } 
 
+    nxt_valueA = (float*)&vec_valueA;
+
+    /*for(int index = 0 ; index < (hA*wB); index++){
+      printf("%.2f ----------- %lu \n", nxt_valueA[index], i);
+    } */
+
+    if(i % 8 == 0){
+      nxt_rowsB = start_rowsB;
+      nxt_result = start_result;
+    }
 
     for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
-      //printf("SEGUNDO FOR  \n");
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
-      //printf("SEGUNDO FOR \n");
+
       for(index = 0 ; index < (hA * wB); index += 8, nxt_result += 8){
+       
         __m256 vec_result = _mm256_load_ps(nxt_result);
+
         vec_result = _mm256_fmadd_ps(vec_valueA, vec_rowsB, vec_result);
 
        _mm256_store_ps(nxt_result, vec_result);
-       //printf("TERCEIRO FOR \n");
-       //cont++;
-       //printf("%d\n", cont);
 
       }
     }  
   }
 
-  /*for(int index = 0 ; index < (hA*wB); index++){
+  for(int index = 0 ; index < (hA*wB); index++){
     printf("%.2f  -----  %d\n", result[index], index);
 
-  }*/
+  }
   
 
   return 0;
