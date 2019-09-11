@@ -1,15 +1,5 @@
-#include <immintrin.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <errno.h>
-#include <string.h>
-
-typedef struct matrix{
-  unsigned long int height;
-  unsigned long int width;
-  float *rows;
-}MATRIX_TYPE;
+#include "matrix_lib.h"
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	long unsigned int h = 1 << 21;
@@ -65,53 +55,3 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 	  return 1;
 	}
-
-	int main(int argc, char *argv[]) {
-	  long unsigned int h = 1<<21;
-	  long unsigned int w = 1<<21;
-	  float scalar;
-	  char *eptr = NULL;
-	  int resultado;
-
-	  // Check arguments
-	  if (argc != 4) {
-	        printf("Usage: %s <vector_length>\n", argv[0]);
-	        return 0;
-	  }
-
-	  // Convert arguments
-	  h = strtol(argv[1], &eptr, 10);
-	  w = strtol(argv[2], &eptr, 10);
-	  scalar = strtof(argv[3], NULL);
-
-	  if (h == 0 || w == 0 || scalar == 0) {
-        printf("%s: erro na conversao do argumento: errno = %d\n", argv[0], errno);
-
-        /* If a conversion error occurred, display a message and exit */
-        if (errno == EINVAL)
-        {
-            printf("Conversion error occurred: %d\n", errno);
-            return 1;
-        }
-
-        /* If the value provided was out of range, display a warning message */
-        if (errno == ERANGE) {
-            printf("The value provided was out of rangei: %d\n", errno);
-            return 1;
-		}
-   	 }
-
-	  MATRIX_TYPE *m = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
-	  m->height = h;
-	  m->width = w;
-
-	  resultado = scalar_matrix_mult(scalar, m);
-
-	  if (resultado == 1){
-	  	printf("Sucesso!\n");
-	  }else{
-	  	printf("Erro no calculo!\n");
-	  }
-
-	  return 0;
-}

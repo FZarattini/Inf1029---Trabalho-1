@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
-#include "timer.h"
+//#include "timer.h"
 
 typedef struct matrix{
   unsigned long int height;
@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
   MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
 
   if(wA != hB){
-    printf("Nao é possivel multiplicar as duas matrizes!");
+    printf("Nao é possivel multiplicar as duas matrizes!\n");
+	return 0;
   }
 
   /* Initialize the two argument vectors */
@@ -45,54 +46,52 @@ int main(int argc, char *argv[]) {
   /* Initialize the three argument vectors */
   __m256 vec_rowsA = _mm256_set1_ps(5.0f);
   __m256 vec_rowsB = _mm256_set1_ps(2.0f);
+  __m256 vec_result = _mm256_set1_ps(0.0f);
 
   float *nxt_rowsA = A->rows; 
   float *nxt_rowsB = B->rows; 
+  float *nxt_result = result;
+  float* start_rowsA = A->rows;
+  float* start_rowsB = B->rows;
 
   float* nxt_valueA = valueA_alligned;
 
   for (i = 0; 
 	i < (hA * wA); 
-	i += 8, nxt_rowsA += 8) {
+	i += 8, nxt_rowsA += 8, nxt_valueA+=8) {
 
 	  /* Store the elements of the vectors in the arrays */
 	  _mm256_store_ps(nxt_rowsA, vec_rowsA);
+	  _mm256_store_ps(nxt_valueA, vec_rowsA);
   }
 
   for(i = 0; i < (hB * wB); i += 8, nxt_rowsB += 8 ){
     _mm256_store_ps(nxt_rowsB, vec_rowsB);
   }
 
+
+  for(i = 0; i < (hA * wB); i += 8, nxt_rowsB += 8 ){
+    _mm256_store_ps(nxt_result,vec_result);
+  }
+
   /* Compute the difference between the two vectors */
   nxt_rowsA = A->rows; 
   nxt_rowsB = B->rows; 
-  float* start_rowsA = A->rows;
-  float* start_rowsB = B->rows;
-
+  nxt_result = result;
+  nxt_valueA = valueA_alligned;
   
-  float *nxt_result = result;
   float *start_result = result;
-
-  __m256 vec_result = _mm256_load_ps(nxt_result);
-  __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
-
-  vec_result = _mm256_set1_ps(0.0);
 
   //cont = 0;
 
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
-    if(i % 8 == 0){
-      nxt_rowsB = start_rowsB;
-      nxt_result = start_result;
-      nxt_result += 2*i;
+
+    __m256 vec_valueA = _mm256_set1_ps(*nxt_rowsA);
+
+    if(i % wB == 0){
+        nxt_rowsB = start_rowsB;
+        nxt_result = start_result;
     }
-
-    __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
-    vec_valueA = _mm256_set1_ps(*nxt_rowsA);
-
-    _mm256_store_ps(nxt_valueA, vec_valueA);
-
-    nxt_valueA = (float*)&vec_valueA;
 
     for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
@@ -105,20 +104,16 @@ int main(int argc, char *argv[]) {
 
        _mm256_store_ps(nxt_result, vec_result);
 
-        /*for(int index = 0 ; index < (hA*wB); index++){
-         printf("%.2f  -----  %d\n", result[index], index);
-
-        }
-        printf("-------------------------------\n");*/
-
       }
     }  
+
   }
 
   for(int index = 0 ; index < (hA*wB); index++){
     printf("%.2f  -----  %d\n", result[index], index);
 
-  }  
+  }
+  
 
   return 0;
 }
