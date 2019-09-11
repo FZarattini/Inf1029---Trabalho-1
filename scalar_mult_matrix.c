@@ -110,7 +110,7 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	  if (resultado == 1){
 	  	printf("Sucesso!\n");
 	  }else{
-	  	printf("Erro no calculo!\n");
+	  	printf("Erro de calculo!\n");
 	  }
 
 	  return 0;

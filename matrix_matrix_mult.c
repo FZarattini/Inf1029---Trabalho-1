@@ -12,35 +12,23 @@ typedef struct matrix{
   float *rows;
 }MATRIX_TYPE;
 
-int main(int argc, char *argv[]) {
+int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct matrix * matrixC){
   long unsigned int hA = 1<<21;
   long unsigned int wA = 1<<21;
   long unsigned int hB = 1<<21;
   long unsigned int wB = 1<<21;
-  long unsigned int i;
-  long unsigned int ind;
-  long unsigned int index;
-  int cont, iter = 0;
-  char *eptr = NULL;
+  long unsigned int i, ind, index;
 
-  // Convert arguments
-  hA = strtol(argv[1], &eptr, 10);
-  wA = strtol(argv[2], &eptr, 10);
-  hB = strtol(argv[3], &eptr, 10);
-  wB = strtol(argv[4], &eptr, 10);
+  hA = matrixA->height;
+  hB = matrixB->height;
+  wA = matrixA->width;
+  wB = matrixB->width;
 
-  MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
-  MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
-
-  if(wA != hB){
-    printf("Nao é possivel multiplicar as duas matrizes!\n");
-	return 0;
-  }
-
-  /* Initialize the two argument vectors */
-  A->rows =  (float*)aligned_alloc(32, hA*wA*sizeof(float));
-  B->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
-  float *result = (float*)aligned_alloc(32, hA*wB*sizeof(float));
+  matrixA->rows =  (float*)aligned_alloc(32, hA*wA*sizeof(float));
+  matrixB->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
+  matrixC->rows = (float*)aligned_alloc(32, hA*wB*sizeof(float));
+  matrixC->height = hA;
+  matrixC->width = wB;
   float *valueA_alligned = (float*) aligned_alloc(32, wB * sizeof(float));
 
   /* Initialize the three argument vectors */
@@ -48,13 +36,12 @@ int main(int argc, char *argv[]) {
   __m256 vec_rowsB = _mm256_set1_ps(2.0f);
   __m256 vec_result = _mm256_set1_ps(0.0f);
 
-  float *nxt_rowsA = A->rows; 
-  float *nxt_rowsB = B->rows; 
-  float *nxt_result = result;
-  float* start_rowsA = A->rows;
-  float* start_rowsB = B->rows;
-
+  float* nxt_rowsA = matrixA->rows; 
+  float* nxt_rowsB = matrixB->rows; 
+  float* nxt_result = matrixC->rows;
   float* nxt_valueA = valueA_alligned;
+  float* start_rowsA = matrixA->rows;
+  float* start_rowsB = matrixB->rows;
 
   for (i = 0; 
 	i < (hA * wA); 
@@ -75,14 +62,12 @@ int main(int argc, char *argv[]) {
   }
 
   /* Compute the difference between the two vectors */
-  nxt_rowsA = A->rows; 
-  nxt_rowsB = B->rows; 
-  nxt_result = result;
+  nxt_rowsA = matrixA->rows; 
+  nxt_rowsB = matrixB->rows; 
+  nxt_result = matrixC->rows;
   nxt_valueA = valueA_alligned;
   
-  float *start_result = result;
-
-  //cont = 0;
+  float *start_result = matrixC->rows;
 
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
 
@@ -110,10 +95,51 @@ int main(int argc, char *argv[]) {
   }
 
   for(int index = 0 ; index < (hA*wB); index++){
-    printf("%.2f  -----  %d\n", result[index], index);
+    printf("%.2f  -----  %d\n", matrixC->rows[index], index);
 
   }
-  
+
+  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  long unsigned int hA = 1<<21;
+  long unsigned int wA = 1<<21;
+  long unsigned int hB = 1<<21;
+  long unsigned int wB = 1<<21;
+  int resultado;
+  char *eptr = NULL;
+
+  // Convert arguments
+  hA = strtol(argv[1], &eptr, 10);
+  wA = strtol(argv[2], &eptr, 10);
+  hB = strtol(argv[3], &eptr, 10);
+  wB = strtol(argv[4], &eptr, 10);
+
+  printf("MALOCANDO\n");
+  MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+  MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+  MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+  printf("MALOCOU\n");
+
+  if(wA != hB){
+    printf("Nao é possivel multiplicar as duas matrizes!\n");
+	return 0;
+  }
+
+  /* Iitialize the two matrices and the result matrix */
+  A->height = hA;
+  A->width = wA;
+  B->height = hB;
+  B->width = wB;
+
+  resultado = matrix_matrix_mult(A, B, C);
+
+  if(resultado == 1){
+    printf("Sucesso!\n");
+  }else{
+    printf("Erro de calculo!\n");
+  }
 
   return 0;
 }
