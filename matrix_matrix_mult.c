@@ -48,8 +48,6 @@ int main(int argc, char *argv[]) {
 
   float *nxt_rowsA = A->rows; 
   float *nxt_rowsB = B->rows; 
-  float* start_rowsA = A->rows;
-  float* start_rowsB = B->rows;
 
   float* nxt_valueA = valueA_alligned;
 
@@ -68,7 +66,8 @@ int main(int argc, char *argv[]) {
   /* Compute the difference between the two vectors */
   nxt_rowsA = A->rows; 
   nxt_rowsB = B->rows; 
-
+  float* start_rowsA = A->rows;
+  float* start_rowsB = B->rows;
 
   
   float *nxt_result = result;
@@ -82,6 +81,11 @@ int main(int argc, char *argv[]) {
   //cont = 0;
 
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
+    if(i % 8 == 0){
+      nxt_rowsB = start_rowsB;
+      nxt_result = start_result;
+      nxt_result += 2*i;
+    }
 
     __m256 vec_valueA = _mm256_load_ps(nxt_valueA);
     vec_valueA = _mm256_set1_ps(*nxt_rowsA);
@@ -89,15 +93,6 @@ int main(int argc, char *argv[]) {
     _mm256_store_ps(nxt_valueA, vec_valueA);
 
     nxt_valueA = (float*)&vec_valueA;
-
-    /*for(int index = 0 ; index < (hA*wB); index++){
-      printf("%.2f ----------- %lu \n", nxt_valueA[index], i);
-    } */
-
-    if(i % 8 == 0){
-      nxt_rowsB = start_rowsB;
-      nxt_result = start_result;
-    }
 
     for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
@@ -110,6 +105,12 @@ int main(int argc, char *argv[]) {
 
        _mm256_store_ps(nxt_result, vec_result);
 
+        /*for(int index = 0 ; index < (hA*wB); index++){
+         printf("%.2f  -----  %d\n", result[index], index);
+
+        }
+        printf("-------------------------------\n");*/
+
       }
     }  
   }
@@ -117,8 +118,7 @@ int main(int argc, char *argv[]) {
   for(int index = 0 ; index < (hA*wB); index++){
     printf("%.2f  -----  %d\n", result[index], index);
 
-  }
-  
+  }  
 
   return 0;
 }

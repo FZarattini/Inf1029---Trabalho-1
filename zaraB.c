@@ -77,8 +77,8 @@ int main(int argc, char *argv[]) {
   /* Compute the difference between the two vectors */
   nxt_rowsA = A->rows; 
   nxt_rowsB = B->rows; 
- nxt_result = result;
-nxt_valueA = valueA_alligned;
+  nxt_result = result;
+  nxt_valueA = valueA_alligned;
   
   float *start_result = result;
 
@@ -87,14 +87,10 @@ nxt_valueA = valueA_alligned;
   for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
 
     __m256 vec_valueA = _mm256_set1_ps(*nxt_rowsA);
-    //__mm256_store_ps(nxt_valueA, vec_valueA);
-    /*for(int index = 0 ; index < (hA*wB); index++){
-      printf("%.2f ----------- %lu \n", nxt_valueA[index], i);
-    } */
 
-    if(i % 8 == 0){
-      nxt_rowsB = start_rowsB;
-      nxt_result = start_result;
+    if(i % wB == 0){
+        nxt_rowsB = start_rowsB;
+        nxt_result = start_result;
     }
 
     for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
