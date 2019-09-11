@@ -69,8 +69,8 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
   
   float *start_result = matrixC->rows;
 
-  for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
-
+  for( i = 0; i < (hA * wA); i += 1, nxt_rowsA += 1){
+    printf("primeiro for: %lu\n",i);
     __m256 vec_valueA = _mm256_set1_ps(*nxt_rowsA);
 
     if(i % wB == 0){
@@ -78,11 +78,12 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
         nxt_result = start_result;
     }
 
-    for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
+    for(ind = 0 ; ind < wB; ind += 8, nxt_rowsB += 8){
+      printf("segundo for: %lu\n",ind);
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
 
       for(index = 0 ; index < (hA * wB); index += 8, nxt_result += 8){
-       
+       printf("terceiro for: %lu\n",index);
         __m256 vec_result = _mm256_load_ps(nxt_result);
 
         vec_result = _mm256_fmadd_ps(vec_valueA, vec_rowsB, vec_result);
@@ -116,11 +117,11 @@ int main(int argc, char *argv[]) {
   hB = strtol(argv[3], &eptr, 10);
   wB = strtol(argv[4], &eptr, 10);
 
-  printf("MALOCANDO\n");
+  printf("comecando\n");
   MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
-  printf("MALOCOU\n");
+  printf("terminando\n");
 
   if(wA != hB){
     printf("Nao é possivel multiplicar as duas matrizes!\n");
