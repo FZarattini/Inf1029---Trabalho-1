@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include "matrix_lub.h"
+#include "matrix_lib.h"
 
 
 int main(int argc, char *argv[])
 {
   int resultado = 1;
+  int i;
   long unsigned int hA = 1<<21;
   long unsigned int wA = 1<<21;
   long unsigned int hB = 1<<21;
@@ -14,8 +15,14 @@ int main(int argc, char *argv[])
   char* arq2;
   char* arq3;
   char* arq4;
+  float* ptr;
 
   char *eptr = NULL;
+
+  FILE* input1 = fopen(arq1, "rb");
+  FILE* input2 = fopen(arq2, "rb");
+  FILE* output1 = fopen(arq3, "wb");
+  FILE* output2 = fopen(arq4, "wb");
 
   // Check arguments
   if (argc != 10) {
@@ -26,7 +33,6 @@ int main(int argc, char *argv[])
         //for (int i=0; i<argc; ++i)
          //       printf("argv[%d] = %s\n", i, argv[i]);
   }
-
 
   scalar = strtof(argv[1], NULL);
   hA = strtol(argv[2], &eptr, 10);
@@ -54,6 +60,28 @@ int main(int argc, char *argv[])
   B->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
   C->rows = (float*)aligned_alloc(32, hA*wB*sizeof(float));
 
+  ptr = A->rows;
+
+  while(!feof(input1)){
+  	fread(ptr, sizeof(float), 1, input1);
+  	ptr += 1;
+  }
+
+  ptr = B->rows;
+
+  while(!feof(input2)){
+  	fread(ptr, sizeof(float), 1, input2);
+  	ptr += 1;
+  }
+
+  for(i = 0; i < hA*wA; i++){
+  	printf("%.2f\n", A->rows[i]);
+  }
+
+  for(i = 0; i < hA*wA; i++){
+  	printf("%.2f\n", B->rows[i]);
+  }
+  /*
   //Chamando as funções
   resultado = scalar_matrix_mult(scalar, A);
   
@@ -67,7 +95,7 @@ int main(int argc, char *argv[])
   if(resultado == 0){
     printf("Erro ao multiplicar matriz por matriz!\n");
     return 0;
-  }
+  }*/
 
 	return 0;
 }

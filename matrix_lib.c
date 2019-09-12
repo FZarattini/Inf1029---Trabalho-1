@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "matrix_lib.h"
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
