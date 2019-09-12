@@ -32,15 +32,18 @@ int main(int argc, char *argv[])
   }
 
   scalar = strtof(argv[1], NULL);
+
+  printf("Escalar %f\n", scalar);
+
   hA = strtol(argv[2], &eptr, 10);
   wA = strtol(argv[3], &eptr, 10);
   hB = strtol(argv[4], &eptr, 10);
   wB = strtol(argv[5], &eptr, 10);
 
   arq1 = argv[6];
-  arq1 = argv[7];
-  arq1 = argv[8];
-  arq1 = argv[9];
+  arq2 = argv[7];
+  arq3 = argv[8];
+  arq4 = argv[9];
 
   FILE* input1 = fopen(arq1, "rb");
   FILE* input2 = fopen(arq2, "rb");
@@ -58,13 +61,17 @@ int main(int argc, char *argv[])
   C->height = hA;
   C->width = wB;
 
+  //printf("Antes Matrix->rows\n");
+
   A->rows = (float*)aligned_alloc(32, hA*wA*sizeof(float));
   B->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
   C->rows = (float*)aligned_alloc(32, hA*wB*sizeof(float));
 
+  //printf("Pre prt = A->rows\n");
+
   ptr = A->rows;
 
-  printf("VAI LER ARQUIVO!\n");
+  //printf("VAI LER ARQUIVO!\n");
   i = 0;
   /*while(fread(ptr, sizeof(float), 1, input1) != 0){
   	printf("aaaaaaaaaaa\n");
@@ -72,14 +79,15 @@ int main(int argc, char *argv[])
   }*/
   while(1){
 
-  	printf("VAI LER ARQUIVO!\n");
-  	int nread = fscanf(input1, "%f", &buffer);
-  	printf("vai salvar no vetor!\n");
-  	A->rows[i] = buffer;
+  	//printf("VAI LER ARQUIVO A!\n");
+  	int nread = fread(&buffer, sizeof(float), 1, input1);
+
   	if(nread < 1){
   		break;
   	}
-  	printf("aaaaaaa");
+  	  	//printf("vai salvar no vetor! A %d\n", i);
+  	  	A->rows[i] = buffer;
+  	i++;
   }
 
   printf("LEU ARQUIVO!\n");
@@ -99,21 +107,38 @@ int main(int argc, char *argv[])
   	printf("%.2f\n", B->rows[i]);
   }
   
-  /*
+  
   //Chamando as funções
+  printf("%d\n", resultado);
   resultado = scalar_matrix_mult(scalar, A);
   
   if(resultado == 0){
     printf("Erro ao multiplicar matriz por escalar!\n");
-    return 0;
   }
+
+  printf("%d\n", resultado);
+
+  for(i = 0; i< wA*hA; i++)
+  {
+
+	  printf("%f\n", A->rows[i]);
+
+  }
+
 
   resultado = matrix_matrix_mult(A, B, C);
 
+  for(i = 0; i< wA*hA; i++)
+  {
+
+	  printf("%f\n", C->rows[i]);
+
+  }
+
+
   if(resultado == 0){
     printf("Erro ao multiplicar matriz por matriz!\n");
-    return 0;
-  }*/
+  }
 
 	return 0;
 }
