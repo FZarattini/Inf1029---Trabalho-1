@@ -6,6 +6,7 @@ int main(int argc, char *argv[])
 {
   int resultado = 1;
   int i;
+  float buffer;
   long unsigned int hA = 1<<21;
   long unsigned int wA = 1<<21;
   long unsigned int hB = 1<<21;
@@ -19,10 +20,6 @@ int main(int argc, char *argv[])
 
   char *eptr = NULL;
 
-  FILE* input1 = fopen(arq1, "rb");
-  FILE* input2 = fopen(arq2, "rb");
-  FILE* output1 = fopen(arq3, "wb");
-  FILE* output2 = fopen(arq4, "wb");
 
   // Check arguments
   if (argc != 10) {
@@ -45,6 +42,11 @@ int main(int argc, char *argv[])
   arq1 = argv[8];
   arq1 = argv[9];
 
+  FILE* input1 = fopen(arq1, "rb");
+  FILE* input2 = fopen(arq2, "rb");
+  FILE* output1 = fopen(arq3, "wb");
+  FILE* output2 = fopen(arq4, "wb");
+
   MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
@@ -62,10 +64,25 @@ int main(int argc, char *argv[])
 
   ptr = A->rows;
 
-  while(!feof(input1)){
-  	fread(ptr, sizeof(float), 1, input1);
-  	ptr += 1;
+  printf("VAI LER ARQUIVO!\n");
+  i = 0;
+  /*while(fread(ptr, sizeof(float), 1, input1) != 0){
+  	printf("aaaaaaaaaaa\n");
+  	//ptr += 1;
+  }*/
+  while(1){
+
+  	printf("VAI LER ARQUIVO!\n");
+  	int nread = fscanf(input1, "%f", &buffer);
+  	printf("vai salvar no vetor!\n");
+  	A->rows[i] = buffer;
+  	if(nread < 1){
+  		break;
+  	}
+  	printf("aaaaaaa");
   }
+
+  printf("LEU ARQUIVO!\n");
 
   ptr = B->rows;
 
@@ -81,6 +98,7 @@ int main(int argc, char *argv[])
   for(i = 0; i < hA*wA; i++){
   	printf("%.2f\n", B->rows[i]);
   }
+  
   /*
   //Chamando as funções
   resultado = scalar_matrix_mult(scalar, A);

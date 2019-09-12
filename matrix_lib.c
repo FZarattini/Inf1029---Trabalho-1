@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "matrix_lib.h"
 
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
@@ -14,6 +12,7 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
     float *result = (float*)aligned_alloc(32, h*w*sizeof(float));
 
   	/* Initialize the three argument vectors */
+    __m256 vec_rows;
   	__m256 vec_scalar = _mm256_set1_ps(scalar_value);
   	//__m256 vec_rows = _mm256_set1_ps(2.0f);
 
@@ -24,7 +23,7 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 		  /* Store the elements of the vectors in the arrays */
 		  _mm256_store_ps(nxt_scalar, vec_scalar);
-		  _mm256_store_ps(nxt_rows, vec_rows);
+		  //_mm256_store_ps(nxt_rows, vec_rows);
 	  }
 
 	  /* Compute the difference between the two vectors */
@@ -34,8 +33,8 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 	  for (long unsigned int i = 0; i < h*w; i += 8, nxt_scalar += 8, nxt_rows += 8, nxt_result += 8) {
 		  /* Initialize the three argument vectors */
-		  __m256 vec_scalar = _mm256_load_ps(nxt_scalar);
-		  __m256 vec_rows = _mm256_load_ps(nxt_rows);
+		  vec_scalar = _mm256_load_ps(nxt_scalar);
+		  vec_rows = _mm256_load_ps(nxt_rows);
 		  //__m256 vec_c = _mm256_load_ps(nxt_c);
 
 		  /* Compute the expression res = a * b + c between the three vectors */
@@ -87,6 +86,9 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
   float* nxt_valueA = valueA_alligned;
   float* start_rowsA = matrixA->rows;
   float* start_rowsB = matrixB->rows;
+
+  __m256 vec_rowsA;
+  __m256 vec_rowsB;
 
   for (i = 0; 
 	i < (hA * wA); 
