@@ -10,12 +10,11 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 	/* Initialize the two argument vectors */
     float *scalar_alligned =  (float*)aligned_alloc(32, h*w*sizeof(float));
-    matrix->rows = (float*)aligned_alloc(32, h*w*sizeof(float));
     float *result = (float*)aligned_alloc(32, h*w*sizeof(float));
 
   	/* Initialize the three argument vectors */
   	__m256 vec_scalar = _mm256_set1_ps(scalar_value);
-  	__m256 vec_rows = _mm256_set1_ps(2.0f);
+  	//__m256 vec_rows = _mm256_set1_ps(2.0f);
 
 	  float *nxt_scalar = scalar_alligned; 
 	  float *nxt_rows = matrix->rows; 
@@ -74,16 +73,11 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
       return 0;
   }
 
-  matrixA->rows =  (float*)aligned_alloc(32, hA*wA*sizeof(float));
-  matrixB->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
-  matrixC->rows = (float*)aligned_alloc(32, hA*wB*sizeof(float));
-  matrixC->height = hA;
-  matrixC->width = wB;
   float *valueA_alligned = (float*) aligned_alloc(32, wB * sizeof(float));
 
   /* Initialize the three argument vectors */
-  __m256 vec_rowsA = _mm256_set1_ps(5.0f);
-  __m256 vec_rowsB = _mm256_set1_ps(2.0f);
+  //__m256 vec_rowsA = _mm256_set1_ps(5.0f);
+  //__m256 vec_rowsB = _mm256_set1_ps(2.0f);
   __m256 vec_result = _mm256_set1_ps(0.0f);
 
   float* nxt_rowsA = matrixA->rows; 
