@@ -46,11 +46,9 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 	  matrix->rows = result;
 
-	  for(index = 0 ; index < (h*w); index++){
-	  	if(matrix->rows[index] != scalar_value*2.0f)
-	  		return 0;
+	  /*for(index = 0 ; index < (h*w); index++){
 	    printf("%.2f ------- %d\n", matrix->rows[index], index);
-	  }
+	  }*/
 
 	  return 1;
 	}
