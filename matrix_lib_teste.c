@@ -33,8 +33,6 @@ int main(int argc, char *argv[])
 
   scalar = strtof(argv[1], NULL);
 
-  printf("Escalar %f\n", scalar);
-
   hA = strtol(argv[2], &eptr, 10);
   wA = strtol(argv[3], &eptr, 10);
   hB = strtol(argv[4], &eptr, 10);
@@ -50,6 +48,11 @@ int main(int argc, char *argv[])
   FILE* output1 = fopen(arq3, "wb");
   FILE* output2 = fopen(arq4, "wb");
 
+  if(input1 == NULL || input2 == NULL || output1 == NULL || output2 == NULL){
+    printf("Erro ao abrir arquivos. Abortando...\n");
+    return 0;
+  }
+
   MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
@@ -61,84 +64,80 @@ int main(int argc, char *argv[])
   C->height = hA;
   C->width = wB;
 
-  //printf("Antes Matrix->rows\n");
-
   A->rows = (float*)aligned_alloc(32, hA*wA*sizeof(float));
   B->rows = (float*)aligned_alloc(32, hB*wB*sizeof(float));
   C->rows = (float*)aligned_alloc(32, hA*wB*sizeof(float));
 
-  //printf("Pre prt = A->rows\n");
-
   ptr = A->rows;
 
-  //printf("VAI LER ARQUIVO!\n");
   i = 0;
-  /*while(fread(ptr, sizeof(float), 1, input1) != 0){
-  	printf("aaaaaaaaaaa\n");
-  	//ptr += 1;
-  }*/
-  while(1){
 
-  	//printf("VAI LER ARQUIVO A!\n");
+  while(i < hA * wA){
   	int nread = fread(&buffer, sizeof(float), 1, input1);
 
   	if(nread < 1){
   		break;
   	}
-  	  	//printf("vai salvar no vetor! A %d\n", i);
   	  	A->rows[i] = buffer;
   	i++;
   }
 
-  printf("LEU ARQUIVO!\n");
-
   ptr = B->rows;
+  i = 0;
 
-  while(!feof(input2)){
+  while(i < hB * wB){
+
   	fread(ptr, sizeof(float), 1, input2);
   	ptr += 1;
-  }
-
-  for(i = 0; i < hA*wA; i++){
-  	printf("%.2f\n", A->rows[i]);
-  }
-
-  for(i = 0; i < hA*wA; i++){
-  	printf("%.2f\n", B->rows[i]);
+    i++;
   }
   
-  
-  //Chamando as funções
-  printf("%d\n", resultado);
   resultado = scalar_matrix_mult(scalar, A);
+
   
   if(resultado == 0){
     printf("Erro ao multiplicar matriz por escalar!\n");
   }
 
-  printf("%d\n", resultado);
-
-  for(i = 0; i< wA*hA; i++)
-  {
-
-	  printf("%f\n", A->rows[i]);
-
-  }
-
-
   resultado = matrix_matrix_mult(A, B, C);
 
-  for(i = 0; i< wA*hA; i++)
+  printf("Gerando arquivo resultado - Multiplicacao matriz x escalar...\n");
+
+  ptr = A->rows;
+  i = 0;
+  while( i < hA*wA){
+    fwrite(ptr, sizeof(float), 1, output1);
+    ptr+=1;
+    i++;
+  }
+
+  printf("Arquivo de saida gerado com sucesso!\n");
+
+  printf("Gerando arquivo resultado - Multiplicacao matrix x matriz...\n");
+  
+  ptr = C->rows;
+  i = 0;
+  while(i < hA * wB){
+    fwrite(ptr, sizeof(float), 1, output2);
+    ptr+=1;
+    i++;
+  }
+
+  printf("Arquivo de saida gerado com sucesso!\n");
+
+  for(i = 0; i< hA * wB; i++)
   {
-
-	  printf("%f\n", C->rows[i]);
-
+	  printf("Resultado final: %.2f ------- posicao %d\n", C->rows[i], i);
   }
 
 
   if(resultado == 0){
     printf("Erro ao multiplicar matriz por matriz!\n");
   }
+
+  free(A);
+  free(B);
+  free(C);
 
 	return 0;
 }

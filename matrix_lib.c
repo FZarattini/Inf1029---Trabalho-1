@@ -14,7 +14,6 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
   	/* Initialize the three argument vectors */
     __m256 vec_rows;
   	__m256 vec_scalar = _mm256_set1_ps(scalar_value);
-  	//__m256 vec_rows = _mm256_set1_ps(2.0f);
 
 	  float *nxt_scalar = scalar_alligned; 
 	  float *nxt_rows = matrix->rows; 
@@ -23,7 +22,6 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 
 		  /* Store the elements of the vectors in the arrays */
 		  _mm256_store_ps(nxt_scalar, vec_scalar);
-		  //_mm256_store_ps(nxt_rows, vec_rows);
 	  }
 
 	  /* Compute the difference between the two vectors */
@@ -35,7 +33,6 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 		  /* Initialize the three argument vectors */
 		  vec_scalar = _mm256_load_ps(nxt_scalar);
 		  vec_rows = _mm256_load_ps(nxt_rows);
-		  //__m256 vec_c = _mm256_load_ps(nxt_c);
 
 		  /* Compute the expression res = a * b + c between the three vectors */
 		  __m256 vec_result = _mm256_mul_ps(vec_scalar, vec_rows);
@@ -45,10 +42,6 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	  }
 
 	  matrix->rows = result;
-
-	  /*for(index = 0 ; index < (h*w); index++){
-	    printf("%.2f ------- %d\n", matrix->rows[index], index);
-	  }*/
 
 	  return 1;
 	}
@@ -60,6 +53,7 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
   long unsigned int hB = 1<<21;
   long unsigned int wB = 1<<21;
   long unsigned int i, ind, index;
+  int bla;
 
   hA = matrixA->height;
   hB = matrixB->height;
@@ -71,17 +65,12 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
       return 0;
   }
 
-  float *valueA_alligned = (float*) aligned_alloc(32, wB * sizeof(float));
-
   /* Initialize the three argument vectors */
-  //__m256 vec_rowsA = _mm256_set1_ps(5.0f);
-  //__m256 vec_rowsB = _mm256_set1_ps(2.0f);
-  __m256 vec_result = _mm256_set1_ps(0.0f);
+  __m256 vec_result = _mm256_set1_ps(0.0);	
 
-  float* nxt_rowsA = matrixA->rows; 
-  float* nxt_rowsB = matrixB->rows; 
+  float* nxt_rowsA = (float*)aligned_alloc(32, hA*wA*sizeof(float)); 
+  float* nxt_rowsB = (float*)aligned_alloc(32, hB*wB*sizeof(float));
   float* nxt_result = matrixC->rows;
-  float* nxt_valueA = valueA_alligned;
   float* start_rowsA = matrixA->rows;
   float* start_rowsB = matrixB->rows;
 
@@ -90,31 +79,44 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 
   for (i = 0; 
 	i < (hA * wA); 
-	i += 8, nxt_rowsA += 8, nxt_valueA+=8) {
+	i += 8, nxt_rowsA += 8) {
 
 	  /* Store the elements of the vectors in the arrays */
 	  _mm256_store_ps(nxt_rowsA, vec_rowsA);
-	  _mm256_store_ps(nxt_valueA, vec_rowsA);
   }
 
   for(i = 0; i < (hB * wB); i += 8, nxt_rowsB += 8 ){
     _mm256_store_ps(nxt_rowsB, vec_rowsB);
   }
 
-
-  for(i = 0; i < (hA * wB); i += 8, nxt_rowsB += 8 ){
+  for(i = 0; i < (hA * wB); i += 8, nxt_result += 8 ){
     _mm256_store_ps(nxt_result,vec_result);
   }
+
+  //Printando vetores antes de calcular
+
+  printf("-----------Vetores antes de calcular a multiplicacao!-----------\n");
+  for(bla = 0; bla != hA*wA; bla++){
+  	printf("VETOR A: %.2f\n", matrixA->rows[bla]);
+  }
+
+  for(bla = 0; bla != hB*wB; bla++){
+  	printf("VETOR B: %.2f\n", matrixB->rows[bla]);
+  }
+
+  for(bla = 0; bla != hA*wB; bla++){
+  	printf("VETOR RESULTADO INICIALIZADO COM: %.2f\n", matrixC->rows[bla]);
+  }
+
 
   /* Compute the difference between the two vectors */
   nxt_rowsA = matrixA->rows; 
   nxt_rowsB = matrixB->rows; 
   nxt_result = matrixC->rows;
-  nxt_valueA = valueA_alligned;
   
   float *start_result = matrixC->rows;
 
-  for( i = 0; i < (hA * wA); i += 8, nxt_rowsA += 8){
+  for( i = 0; i < (hA * wA); i += 1, nxt_rowsA += 1){
 
     __m256 vec_valueA = _mm256_set1_ps(*nxt_rowsA);
 
@@ -123,10 +125,10 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
         nxt_result = start_result;
     }
 
-    for(ind = 0 ; ind < (hB*wB); ind += 8, nxt_rowsB += 8){
+    for(ind = 0 ; ind < wB; ind += 8, nxt_rowsB += 8){
       __m256 vec_rowsB = _mm256_load_ps(nxt_rowsB);
 
-      for(index = 0 ; index < (hA * wB); index += 8, nxt_result += 8){
+      for(index = 0 ; index < wB; index += 8, nxt_result += 8){
        
         __m256 vec_result = _mm256_load_ps(nxt_result);
 
@@ -136,11 +138,6 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 
       }
     }  
-
-  }
-
-  for(int index = 0 ; index < (hA*wB); index++){
-    printf("%.2f  -----  %d\n", matrixC->rows[index], index);
 
   }
 
