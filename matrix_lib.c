@@ -42,6 +42,12 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	  }
 
 	  matrix->rows = result;
+	
+	for(int i = 0; i < h*w; i++)
+	{
+		if(matrix->rows[i] == NULL)
+		return 0;
+	}
 
 	  return 1;
 	}
@@ -140,6 +146,13 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
     }  
 
   }
+
+  for(int i = 0; i < h*w; i++)
+  {
+	if(matrixC->rows[i] == NULL)
+	return 0;
+  }
+
 
   return 1;
 }

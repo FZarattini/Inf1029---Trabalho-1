@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
   FILE* output1 = fopen(arq3, "wb");
   FILE* output2 = fopen(arq4, "wb");
 
+
   if(input1 == NULL || input2 == NULL || output1 == NULL || output2 == NULL){
     printf("Erro ao abrir arquivos. Abortando...\n");
     return 0;
@@ -56,6 +57,12 @@ int main(int argc, char *argv[])
   MATRIX_TYPE *A = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *B = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
   MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
+
+
+   if ((A == NULL) || (C == NULL) || (C == NULL) || (result == NULL)) {
+	printf("Problema em alocar memória das matrizes.\n");
+	return 1;
+  }
 
   A->height = hA;
   A->width = wA;
