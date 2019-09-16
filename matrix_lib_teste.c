@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
   MATRIX_TYPE *C = (MATRIX_TYPE*)malloc(sizeof(MATRIX_TYPE));
 
 
-   if ((A == NULL) || (C == NULL) || (C == NULL) || (result == NULL)) {
+   if ((A == NULL) || (C == NULL) || (C == NULL)) {
 	printf("Problema em alocar memória das matrizes.\n");
 	return 1;
   }

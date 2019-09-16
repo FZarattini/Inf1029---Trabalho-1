@@ -42,11 +42,17 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix){
 	  }
 
 	  matrix->rows = result;
+
+	  nxt_rows = matrix->rows;
 	
 	for(int i = 0; i < h*w; i++)
 	{
-		if(matrix->rows[i] == NULL)
-		return 0;
+		if(nxt_rows == NULL)
+		{
+			return 0;
+		}
+
+		nxt_rows++;
 	}
 
 	  return 1;
@@ -101,7 +107,7 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 
   //Printando vetores antes de calcular
 
-  printf("-----------Vetores antes de calcular a multiplicacao!-----------\n");
+  printf("-----------Vetores antes de calcular a multiplicacao de matrizes!-----------\n");
   for(bla = 0; bla != hA*wA; bla++){
   	printf("VETOR A: %.2f\n", matrixA->rows[bla]);
   }
@@ -147,10 +153,14 @@ int matrix_matrix_mult(struct matrix *matrixA, struct matrix * matrixB, struct m
 
   }
 
-  for(int i = 0; i < h*w; i++)
+  nxt_result = matrixC->rows;
+  for(int i = 0; i < hA*wB; i++)
   {
-	if(matrixC->rows[i] == NULL)
-	return 0;
+	if(nxt_result == NULL)
+	{	
+		return 0;
+	}
+	nxt_result++;
   }
 
 
